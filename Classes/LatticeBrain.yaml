@@ -1,0 +1,63 @@
+Namespaces:
+  =: io.murano.apps.paas
+  std: io.murano
+  res: io.murano.resources
+  sys: io.murano.system
+  apps: io.murano.apps
+  net: io.murano.networking
+
+
+Name: LatticeBrain
+
+Extends: std:Application
+
+Properties:
+  instance:
+    Contract: $.class(res:Instance).notNull()
+
+Methods:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Arguments:
+      - lattice_tar_url:
+          Contract: $.string().notNull()
+
+      - domain:
+          Contract: $.string().notNull()
+    Body:
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $log: $this.find(std:Environment).reporter
+          - $securityGroupIngress:
+              - ToPort: 65535
+                FromPort: 1
+                IpProtocol: tcp
+                External: True
+          - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
+          - $log.report($this,'Creating VM for Lattice Brain server')
+          - $.instance.deploy()
+          - $log.report($this,'Installing Lattice Brain')
+          - $resources: new(sys:Resources)
+
+
+          - $brain_ip:  $.getIp()
+          - $template: $resources.yaml('SetVarBrain.template').bind(dict(
+                COORDINATOR_IP => $brain_ip,
+                SYSTEM_DOMAIN => $domain
+              ))
+          - $.instance.agent.call($template, $resources)
+
+          - $template: $resources.yaml('InstallBrain.template').bind(dict(
+                LATTICE_TAR_URL => $lattice_tar_url
+              ))
+          - $.instance.agent.call($template, $resources)
+
+          - $log.report($this,'Lattice Brain installation is complete')
+          - $.setAttr(deployed, True)
+
+  getIp:
+    Body:
+      Return: $.instance.ipAddresses[0]

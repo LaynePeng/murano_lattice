@@ -1,0 +1,21 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Set Var Cell
+
+Parameters:
+  COORDINATOR_IP: $COORDINATOR_IP
+  LATTICE_CELL_ID: $LATTICE_CELL_ID
+  GARDEN_EXTERNAL_IP: $GARDEN_EXTERNAL_IP
+
+Body: |
+  return setVarCell('{0}'.format(args.COORDINATOR_IP, args.LATTICE_CELL_ID, args.GARDEN_EXTERNAL_IP)).stdout
+
+Scripts:
+  setVarCell:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: set_var_cell.sh
+    Files: []
+    Options:
+      captureStdout: true
+      captureStderr: true

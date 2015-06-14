@@ -1,0 +1,20 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Set Var Brain
+
+Parameters:
+  COORDINATOR_IP: $COORDINATOR_IP
+  SYSTEM_DOMAIN: $SYSTEM_DOMAIN
+
+Body: |
+  return setVarBrain('{0}'.format(args.COORDINATOR_IP, args.SYSTEM_DOMAIN)).stdout
+
+Scripts:
+  setVarCell:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: set_var_brain.sh
+    Files: []
+    Options:
+      captureStdout: true
+      captureStderr: true

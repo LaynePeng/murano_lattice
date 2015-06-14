@@ -1,0 +1,19 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Install Cell
+
+Parameters:
+  LATTICE_TAR_URL: $LATTICE_TAR_URL
+
+Body: |
+  return installCell('{0}'.format(args.LATTICE_TAR_URL)).stdout
+
+Scripts:
+  installCell:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: install_cell.sh
+    Files: []
+    Options:
+      captureStdout: true
+      captureStderr: true

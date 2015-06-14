@@ -1,0 +1,19 @@
+FormatVersion: 2.0.0
+Version: 1.0.0
+Name: Install Brain
+
+Parameters:
+  LATTICE_TAR_URL: $LATTICE_TAR_URL
+
+Body: |
+  return installBrain('{0}'.format(args.LATTICE_TAR_URL)).stdout
+
+Scripts:
+  installBrain:
+    Type: Application
+    Version: 1.0.0
+    EntryPoint: install_brain.sh
+    Files: []
+    Options:
+      captureStdout: true
+      captureStderr: true

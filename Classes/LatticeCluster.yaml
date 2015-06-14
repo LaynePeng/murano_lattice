@@ -1,0 +1,68 @@
+#  Licensed under the Apache License, Version 2.0 (the "License"); you may
+#  not use this file except in compliance with the License. You may obtain
+#  a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#  License for the specific language governing permissions and limitations
+#  under the License.
+
+Namespaces:
+  =: io.murano.apps.paas
+  std: io.murano
+  res: io.murano.resources
+  sys: io.murano.system
+
+Name: LatticeCluster
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+
+  brainNode:
+    Contract: $.class(LatticeBrain).notNull()
+
+  cellNodes:
+    Contract:
+      - $.class(LatticeCell).notNull()
+      - 1
+
+  nodeCount:
+    Contract: $.int().notNull().check($ > 0)
+    Usage: InOut
+
+  lattice_tar_url:
+    Contract: $.string().notNull()
+
+  domain:
+    Contract: $.string().notNull()
+
+Methods:
+  initialize:
+    Body:
+      - $._environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - $prevNodeCount: $.getAttr(lastNodeCount, 0)
+
+      - If: $prevNodeCount = 0
+        Then:
+          - $._environment.reporter.report($this, 'Creating VMs for Lattice Cluster...')
+          - $._environment.reporter.report($this, 'Creating VM for Lattice Brain Node...')
+          - $.brainNode.deploy(lattice_tar_url=>$.lattice_tar_url, domain=>$.domain)
+      - If: $prevNodeCount != $.nodeCount
+        Then:
+          - $brain_ip: $.getIp()
+          - $._environment.reporter.report($this, 'Creating VMs for Lattice Cell Nodes...')
+          - $.cellNodes.skip($.prevNodeCount).pselect($.deploy(lattice_tar_url=>$.lattice_tar_url, brain_ip=>$brain_ip, cell_id=>$index))
+          - $.setAttr(lastNodeCount, $.nodeCount)
+
+  getIp:
+    Body:
+      Return: $.brainNode.getIp()
